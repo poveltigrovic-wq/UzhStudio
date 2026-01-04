@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UZH STATION v20.6</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+<style>
+:root { --bg: #0d1117; --side: #161b22; --acc: #58a6ff; --green: #238636; --red: #f85149; --txt: #c9d1d9; }
+body, html { margin: 0; padding: 0; height: 100vh; background: var(--bg); color: var(--txt); font-family: monospace; overflow: hidden; }
+header { background: #21262d; height: 50px; display: flex; align-items: center; padding: 0 15px; border-bottom: 1px solid #30363d; gap: 10px; }
+#main { display: flex; height: calc(100vh - 50px); }
+#explorer { width: 200px; background: var(--side); border-right: 1px solid #30363d; overflow-y: auto; }
+.file-item { padding: 8px; cursor: pointer; font-size: 12px; border-bottom: 1px solid #21262d; color: #8b949e; }
+.file-item.active { background: #24292e; color: var(--acc); font-weight: bold; }
+#work-area { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+#editor { flex: 1; font-size: 14px; }
+#term-wrap { height: 200px; background: #010409; border-top: 2px solid #30363d; display: flex; flex-direction: column; }
+#terminal { flex: 1; padding: 10px; overflow-y: auto; color: #39ff14; font-size: 11px; white-space: pre-wrap; }
+#input-line { display: none; padding: 5px; background: #0c0e12; border-top: 1px solid #30363d; }
+#input-line input { background: transparent; border: none; color: #39ff14; outline: none; width: 90%; font-family: inherit; }
+.btn { background: #30363d; border: none; color: white; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 11px; }
+#modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--side); padding: 20px; border: 1px solid var(--acc); z-index: 2000; border-radius: 8px; }
+</style>
+</head>
+<body>
+
+<header>
+<button class="btn" style="background:var(--green)" onclick="run()">▶ RUN</button>
+<button class="btn" onclick="document.getElementById('modal').style.display='block'">+ NEW</button>
+<div style="flex-grow:1; text-align:center; font-size:12px;">UZH STATION v20.6</div>
+</header>
+
+<div id="main">
+<div id="explorer" id="files"></div>
+<div id="work-area">
+<div id="editor"></div>
+<div id="term-wrap">
+<div id="terminal"></div>
+<div id="input-line">
+<span>> </span><input type="text" id="term-in" onkeydown="handleKey(event)">
+</div>
+</div>
+</div>
+</div>
+
+<div id="modal">
+<div style="font-size:12px; margin-bottom:10px;">Имя файла:</div>
+<input type="text" id="new-name" style="width:100%; margin-bottom:10px;">
+<button class="btn" onclick="addF()">ОК</button>
+<button class="btn" onclick="document.getElementById('modal').style.display='none'">X</button>
+</div>
+
+<script>
+let py;
+let fs = JSON.parse(localStorage.getItem("uzh_v6") || '{"main.guzh":"using-guzh\\nwrite-\\"Ready v20.6\\""}');
+let active = Object.keys(fs)[0];
+let inputResolve = null;
+
+const editor = ace.edit("editor");
+editor.setTheme("ace/theme/monokai");
+editor.session.setMode("ace/mode/python");
+
+function log(m, err=false) {
+const t = document.getElementById("terminal");
+const d = document.createElement("div");
+if(err) d.style.color = "var(--red)";
+d.innerText = (err ? "[ERROR] " : "> ") + m;
+t.appendChild(d); t.scrollTop = t.scrollHeight;
+}
+
+function save() { fs[active] = editor.getValue(); localStorage.setItem("uzh_v6", JSON.stringify(fs)); }
+
+function render() {
+const e = document.getElementById("explorer");
+e.innerHTML = "";
+Object.keys(fs).forEach(k => {
+let div = document.createElement("div");
+div.className = `file-item ${k===active?'active':''}`;
+div.innerText = "📄 " + k;
+div.onclick = () => { save(); active = k; editor.setValue(fs[k], -1); render(); };
+e.appendChild(div);
+});
+}
+
+function addF() {
+let n = document.getElementById("new-name").value;
+if(n) { fs[n] = "using-guzh\n"; active = n; render(); save(); }
+document.getElementById("modal").style.display='none';
+}
+
+window.get_input = function() {
+document.getElementById('input-line').style.display = 'block';
+document.getElementById('term-in').focus();
+return new Promise(r => { inputResolve = r; });
+}
+
+function handleKey(e) {
+if(e.key === 'Enter' && inputResolve) {
+let v = e.target.value; log(v);
+e.target.value = ''; document.getElementById('input-line').style.display = 'none';
+inputResolve(v); inputResolve = null;
+}
+}
+
+async function start() {
+log("Loading...");
+py = await loadPyodide();
+editor.setValue(fs[active], -1);
+render();
+log("System Online.");
+}
+start();
+
+async function run() {
+save();
+document.getElementById("terminal").innerHTML = "";
+py.globals.set("user_code", editor.getValue());
+
+// ГАРАНТИРОВАННАЯ СБОРКА КОДА ДЛЯ PYTHON (Без IndentationError)
+const code = [
+"import json, traceback",
+"from js import window",
+"async def engine():",
+"    mem = {}",
+"    out = []",
+"    try:",
+"        lines = user_code.split('\\n')",
+"        if not any(l.strip().startswith('using-') for l in lines):",
+"            return json.dumps([{'t':'err', 'm':'No using- header!'}])",
+"        for i, l in enumerate(lines):",
+"            line = l.strip()",
+"            if not line or line.startswith('using-') or line.startswith('//'): continue",
+"            try:",
+"                if 'read-' in line:",
+"                    var = line.replace('read-', '').strip()",
+"                    mem[var] = await window.get_input()",
+"                elif 'write-' in line:",
+"                    v = line.replace('write-', '').strip('\"')",
+"                    out.append({'t':'msg', 'm': str(mem.get(v, v))})",
+"                elif '-' in line:",
+"                    p = line.split('-', 1)",
+"                    mem[p[0].strip()] = p[1].strip('\"')",
+"            except Exception as e_line:",
+"                out.append({'t':'err', 'm': f'Line {i+1}: {str(e_line)}'})",
+"        return json.dumps(out)",
+"    except Exception:",
+"        return json.dumps([{'t':'err', 'm': traceback.format_exc()}])",
+"import asyncio",
+"await engine()"
+].join('\n');
+
+try {
+let res = await py.runPythonAsync(code);
+let data = JSON.parse(res);
+data.forEach(i => log(i.m, i.t === 'err'));
+} catch(e) { log(e.message, true); }
+}
+</script>
+</body>
+</html>
