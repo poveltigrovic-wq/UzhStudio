@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UZH Studio | Next-Gen IDE</title>
+    <title>UZH Studio | Professional IDE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -13,154 +13,110 @@
             --green: #238636;
             --txt: #c9d1d9;
             --white: #ffffff;
+            --kw: #ff7b72;
+            --str: #a5d6ff;
+            --var: #ffa657;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; transition: all 0.3s ease; }
-        
-        body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--txt);
-            overflow-x: hidden;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--txt); overflow-x: hidden; }
 
-        /* Плавная смена контента */
-        .fade-text { transition: opacity 0.3s ease; opacity: 1; }
-        .fade-out { opacity: 0; }
+        .fade-content { transition: opacity 0.3s ease, transform 0.3s ease; }
+        .fade-hidden { opacity: 0; transform: translateY(10px); }
 
-        /* Дизайн ползунка (Toggle Switch) */
+        /* Тумблер языка */
         .lang-control {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(22, 27, 34, 0.8);
-            padding: 8px 15px;
-            border-radius: 50px;
-            border: 1px solid #30363d;
-            backdrop-filter: blur(10px);
+            position: fixed; top: 30px; right: 30px; z-index: 1000;
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(22, 27, 34, 0.8); padding: 10px 20px;
+            border-radius: 50px; border: 1px solid #30363d; backdrop-filter: blur(12px);
         }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 22px;
-        }
-
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
         .switch input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #30363d;
-            border-radius: 34px;
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #30363d; border-radius: 34px; transition: 0.4s; }
+        .slider:before { 
+            position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; 
+            background: var(--white); border-radius: 50%; 
+            transition: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px; width: 16px;
-            left: 3px; bottom: 3px;
-            background-color: var(--white);
-            border-radius: 50%;
-        }
-
-        input:checked + .slider { background-color: var(--acc); }
+        input:checked + .slider { background: var(--acc); }
         input:checked + .slider:before { transform: translateX(22px); }
+        .lang-label { font-size: 13px; font-weight: 800; color: #484f58; transition: 0.3s; }
+        .lang-label.active { color: var(--white); text-shadow: 0 0 10px var(--acc); transform: scale(1.1); }
 
-        .lang-label { font-size: 12px; font-weight: bold; color: #8b949e; cursor: pointer; }
-        .lang-label.active { color: var(--white); }
-
-        /* Основной стиль */
         header {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 10%;
-            background: radial-gradient(circle at 20% 50%, #1e293b 0%, #0d1117 100%);
+            min-height: 100vh; display: flex; align-items: center; justify-content: center;
+            padding: 0 10%; background: radial-gradient(circle at 20% 50%, #1e293b 0%, #0d1117 100%);
         }
 
-        .hero-container { display: flex; align-items: center; gap: 50px; width: 100%; }
+        .hero-container { display: flex; align-items: center; gap: 60px; width: 100%; }
         .hero-content { flex: 1; }
-        .hero-content h1 { font-size: 4rem; color: var(--white); line-height: 1.1; margin-bottom: 20px; }
+        .hero-content h1 { font-size: 4.5rem; color: var(--white); margin-bottom: 25px; line-height: 1; }
         .hero-content h1 span { color: var(--acc); }
 
+        /* КНОПКА СКАЧИВАНИЯ И СПИСОК */
         .download-box { position: relative; display: inline-block; margin-top: 40px; }
         .main-dl-btn {
-            background: var(--green);
-            color: white;
-            padding: 18px 45px;
-            border: none;
-            border-radius: 12px;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            box-shadow: 0 10px 20px rgba(35, 134, 54, 0.3);
-            z-index: 5;
+            background: var(--green); color: white; padding: 20px 50px; border: none; border-radius: 14px;
+            font-size: 20px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 10px 25px rgba(35, 134, 54, 0.4); transition: 0.3s;
         }
+        .main-dl-btn:hover { transform: translateY(-3px); background: #2ea043; }
 
         .dl-list {
-            position: absolute;
-            bottom: calc(100% + 15px);
-            left: 0; width: 115%;
-            background: var(--card);
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            display: none;
-            flex-direction: column;
-            z-index: 100;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5);
-            transform: translateY(10px);
-            transition: 0.3s;
+            position: absolute; bottom: calc(100% + 15px); left: 0; width: 300px;
+            background: var(--card); border: 1px solid #30363d; border-radius: 15px;
+            display: none; flex-direction: column; overflow: hidden;
+            box-shadow: 0 -15px 40px rgba(0,0,0,0.6); z-index: 100;
+            animation: fadeIn 0.3s ease;
         }
-        .dl-list.active { display: flex; transform: translateY(0); }
-
-        .dl-item {
-            padding: 15px 25px;
-            color: var(--white);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border-bottom: 1px solid #30363d;
+        .dl-list.active { display: flex; }
+        
+        .dl-item { 
+            padding: 18px 25px; color: var(--white); text-decoration: none; 
+            display: flex; align-items: center; gap: 18px; 
+            border-bottom: 1px solid #30363d; transition: 0.3s;
         }
-        .dl-item:hover { background: #21262d; }
+        .dl-item:hover { background: #21262d; padding-left: 32px; }
+        .dl-item i { font-size: 24px; }
+        .dl-item .info { display: flex; flex-direction: column; }
+        .dl-item .title { font-weight: bold; font-size: 15px; }
+        .dl-item .sub { font-size: 11px; color: #8b949e; margin-top: 2px; }
 
-        /* Код */
-        .hero-code { flex: 1.2; perspective: 1000px; }
+        /* ТЕРМИНАЛ */
+        .hero-code { flex: 1.2; perspective: 1200px; }
         .code-card {
-            background: #010409;
-            border: 1px solid #30363d;
-            border-radius: 16px;
-            padding: 25px;
-            transform: rotateY(-5deg) rotateX(5deg);
-            box-shadow: 20px 20px 60px rgba(0,0,0,0.5);
+            background: #010409; border: 1px solid #30363d; border-radius: 20px;
+            padding: 30px; transform: rotateY(-8deg) rotateX(4deg);
+            box-shadow: 25px 25px 70px rgba(0,0,0,0.7); min-height: 380px; transition: 0.5s;
         }
+        .code-card:hover { transform: rotateY(0) rotateX(0); border-color: var(--acc); }
 
-        pre { font-family: 'JetBrains Mono', monospace; font-size: 14px; line-height: 1.6; }
-        .kw { color: #ff7b72; }
-        .str { color: #a5d6ff; }
-        .var { color: #ffa657; }
-
-        @media (max-width: 1000px) {
-            .hero-container { flex-direction: column; text-align: center; }
-            header { padding: 100px 5%; }
+        .restart-btn {
+            background: transparent; border: 1px solid #30363d; color: #8b949e;
+            width: 35px; height: 35px; border-radius: 8px; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center;
         }
+        .restart-btn:hover { color: var(--white); border-color: var(--acc); transform: rotate(180deg); }
+
+        .terminal-body { 
+            font-family: 'JetBrains Mono', monospace; font-size: 15px; 
+            line-height: 1.7; color: #d1d5db; white-space: pre-wrap;
+        }
+        .kw { color: var(--kw); font-weight: bold; }
+        .str { color: var(--str); }
+        .var { color: var(--var); }
+        .cursor { display: inline-block; width: 9px; height: 18px; background: var(--acc); animation: blink 1s infinite; vertical-align: middle; margin-left: 4px; }
+        @keyframes blink { 50% { opacity: 0; } }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width: 1000px) { .hero-container { flex-direction: column; text-align: center; } .hero-content h1 { font-size: 3rem; } }
     </style>
 </head>
 <body>
 
 <div class="lang-control">
-    <span class="lang-label" id="label-ru">RU</span>
+    <span class="lang-label active" id="label-ru">RU</span>
     <label class="switch">
         <input type="checkbox" id="lang-toggle" onchange="toggleLanguage()">
         <span class="slider"></span>
@@ -171,52 +127,40 @@
 <header>
     <div class="hero-container">
         <div class="hero-content">
-            <h1 id="h1" class="fade-text">Студия <span>UZH</span></h1>
-            <p id="p" class="fade-text" style="color: #8b949e; margin-bottom: 20px; font-size: 1.2rem;">
+            <h1 id="h1" class="fade-content">Студия <span>UZH</span></h1>
+            <p id="p" class="fade-content" style="color: #8b949e; margin-bottom: 25px; font-size: 1.25rem;">
                 Профессиональная среда разработки GUZH. <br>Версия ядра: 20.9 [Stable]
             </p>
-
             <div class="download-box">
                 <div class="dl-list" id="dlList">
                     <a href="uzh_station.html" download class="dl-item">
                         <i class="fab fa-windows" style="color:#00a4ef"></i>
-                        <div>
-                            <div style="font-weight: bold;">Windows / Web</div>
-                            <div style="font-size: 10px; color: #8b949e;" class="dl-sub">Скачать IDE (.html)</div>
+                        <div class="info">
+                            <span class="title">Windows / Web</span>
+                            <span class="sub" id="sub-win">Скачать IDE (.html)</span>
                         </div>
                     </a>
                     <a href="uzh_station.apk" download class="dl-item">
                         <i class="fab fa-android" style="color:#3ddc84"></i>
-                        <div>
-                            <div style="font-weight: bold;">Android Mobile</div>
-                            <div style="font-size: 10px; color: #8b949e;" class="dl-sub">Скачать Студию (.apk)</div>
+                        <div class="info">
+                            <span class="title">Android Mobile</span>
+                            <span class="sub" id="sub-and">Скачать Студию (.apk)</span>
                         </div>
                     </a>
                 </div>
                 <button class="main-dl-btn" onclick="toggleDl()">
-                    <i class="fas fa-download"></i> <span id="btn-text" class="fade-text">Скачать UZH</span>
+                    <i class="fas fa-download"></i> <span id="btn-text" class="fade-content">Скачать UZH</span>
                 </button>
             </div>
         </div>
 
         <div class="hero-code">
             <div class="code-card">
-                <div style="display:flex; gap:8px; margin-bottom:15px; border-bottom: 1px solid #21262d; padding-bottom:10px;">
-                    <div style="width:10px; height:10px; border-radius:50%; background:#ff5f56"></div>
-                    <div style="width:10px; height:10px; border-radius:50%; background:#ffbd2e"></div>
-                    <div style="width:10px; height:10px; border-radius:50%; background:#27c93f"></div>
+                <div style="display:flex; justify-content:space-between; margin-bottom:15px; border-bottom:1px solid #21262d; padding-bottom:10px;">
+                    <div style="display:flex; gap:8px;"><div style="width:12px; height:12px; border-radius:50%; background:#ff5f56"></div><div style="width:12px; height:12px; border-radius:50%; background:#ffbd2e"></div><div style="width:12px; height:12px; border-radius:50%; background:#27c93f"></div></div>
+                    <button class="restart-btn" onclick="resetTerminal()"><i class="fas fa-redo-alt"></i></button>
                 </div>
-                <pre>
-<span class="kw">using-guzh</span>
-
-<span class="var">name</span>-<span class="str">"Studio_User"</span>
-<span class="kw">write-</span><span class="str">"UZH Studio запущен"</span>
-
-<span class="kw">read-</span><span class="var">action</span>
-<span class="kw">write-</span><span class="str">"Выполняю команду..."</span>
-<span class="kw">write-</span><span class="var">action</span>
-
-<span class="kw">write-</span><span class="str">"Статус: Стабильно"</span></pre>
+                <div class="terminal-body"><span id="terminal"></span><span class="cursor"></span></div>
             </div>
         </div>
     </div>
@@ -228,58 +172,90 @@
             h1: 'Студия <span>UZH</span>',
             p: 'Профессиональная среда разработки GUZH. <br>Версия ядра: 20.9 [Stable]',
             btn: 'Скачать UZH',
-            dlSubWin: 'Скачать IDE (.html)',
-            dlSubAnd: 'Скачать Студию (.apk)'
+            subWin: 'Скачать IDE (.html)',
+            subAnd: 'Скачать Студию (.apk)',
+            code: [
+                {t: 'using-guzh', c: 'kw'}, {t: '\n\n', c: ''},
+                {t: 'name-', c: 'var'}, {t: '"Studio_User"', c: 'str'}, {t: '\n', c: ''},
+                {t: 'write-', c: 'kw'}, {t: '"Привет, UZH!"', c: 'str'}, {t: '\n\n', c: ''},
+                {t: 'read-', c: 'kw'}, {t: 'action', c: 'var'}, {t: '\n', c: ''},
+                {t: 'write-', c: 'kw'}, {t: '"Выполняю..."', c: 'str'}
+            ]
         },
         en: {
             h1: '<span>UZH</span> Studio',
             p: 'Professional GUZH development environment. <br>Kernel Version: 20.9 [Stable]',
             btn: 'Download UZH',
-            dlSubWin: 'Get IDE (.html)',
-            dlSubAnd: 'Get Studio (.apk)'
+            subWin: 'Get IDE (.html)',
+            subAnd: 'Get Studio (.apk)',
+            code: [
+                {t: 'using-guzh', c: 'kw'}, {t: '\n\n', c: ''},
+                {t: 'name-', c: 'var'}, {t: '"Studio_User"', c: 'str'}, {t: '\n', c: ''},
+                {t: 'write-', c: 'kw'}, {t: '"Hello, UZH!"', c: 'str'}, {t: '\n\n', c: ''},
+                {t: 'read-', c: 'kw'}, {t: 'action', c: 'var'}, {t: '\n', c: ''},
+                {t: 'write-', c: 'kw'}, {t: '"Processing..."', c: 'str'}
+            ]
         }
     };
 
+    let currentLang = 'ru';
+    let tokenIdx = 0;
+    let charIdx = 0;
+    let typingTimer;
+
+    function typeCode() {
+        const terminal = document.getElementById('terminal');
+        const tokens = translations[currentLang].code;
+        
+        if (tokenIdx < tokens.length) {
+            const token = tokens[tokenIdx];
+            if (charIdx === 0) {
+                const span = document.createElement('span');
+                if (token.c) span.className = token.c;
+                span.id = 'active-token';
+                terminal.appendChild(span);
+            }
+            const activeSpan = document.getElementById('active-token');
+            activeSpan.textContent += token.t[charIdx];
+            charIdx++;
+            if (charIdx >= token.t.length) {
+                activeSpan.id = '';
+                tokenIdx++; charIdx = 0;
+            }
+            typingTimer = setTimeout(typeCode, 45);
+        }
+    }
+
+    function resetTerminal() {
+        clearTimeout(typingTimer);
+        document.getElementById('terminal').innerHTML = '';
+        tokenIdx = 0; charIdx = 0;
+        typeCode();
+    }
+
     function toggleLanguage() {
         const isEn = document.getElementById('lang-toggle').checked;
-        const lang = isEn ? 'en' : 'ru';
-        
-        // Эффект плавного исчезновения
-        const elements = document.querySelectorAll('.fade-text');
-        const labels = { ru: document.getElementById('label-ru'), en: document.getElementById('label-en') };
+        currentLang = isEn ? 'en' : 'ru';
+        const fades = document.querySelectorAll('.fade-content');
+        fades.forEach(f => f.classList.add('fade-hidden'));
 
-        elements.forEach(el => el.classList.add('fade-out'));
-        
         setTimeout(() => {
-            document.getElementById('h1').innerHTML = translations[lang].h1;
-            document.getElementById('p').innerHTML = translations[lang].p;
-            document.getElementById('btn-text').innerText = translations[lang].btn;
-            
-            const subs = document.querySelectorAll('.dl-sub');
-            subs[0].innerText = translations[lang].dlSubWin;
-            subs[1].innerText = translations[lang].dlSubAnd;
-
-            // Смена активного текста в тумблере
-            if(lang === 'en') {
-                labels.en.classList.add('active');
-                labels.ru.classList.remove('active');
-            } else {
-                labels.ru.classList.add('active');
-                labels.en.classList.remove('active');
-            }
-
-            // Плавное появление
-            elements.forEach(el => el.classList.remove('fade-out'));
+            document.getElementById('h1').innerHTML = translations[currentLang].h1;
+            document.getElementById('p').innerHTML = translations[currentLang].p;
+            document.getElementById('btn-text').innerText = translations[currentLang].btn;
+            document.getElementById('sub-win').innerText = translations[currentLang].subWin;
+            document.getElementById('sub-and').innerText = translations[currentLang].subAnd;
+            document.getElementById('label-ru').classList.toggle('active', !isEn);
+            document.getElementById('label-en').classList.toggle('active', isEn);
+            fades.forEach(f => f.classList.remove('fade-hidden'));
+            resetTerminal();
         }, 300);
     }
 
-    // Инициализация
-    document.getElementById('label-ru').classList.add('active');
-
     function toggleDl() { document.getElementById('dlList').classList.toggle('active'); }
-    window.onclick = function(e) {
-        if (!e.target.closest('.download-box')) { document.getElementById('dlList').classList.remove('active'); }
-    }
+    window.onclick = function(e) { if (!e.target.closest('.download-box')) { document.getElementById('dlList').classList.remove('active'); } }
+    window.onload = typeCode;
 </script>
 </body>
 </html>
+
