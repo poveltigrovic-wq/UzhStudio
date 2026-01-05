@@ -26,7 +26,6 @@
         .fade-content { transition: opacity 0.3s ease, transform 0.3s ease; }
         .fade-hidden { opacity: 0; transform: translateY(10px); }
 
-        /* Верхние кнопки управления */
         .top-controls { position: absolute; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 15px; align-items: center; }
 
         .snow-btn {
@@ -58,16 +57,19 @@
         .hero-content h1 { font-size: clamp(2.5rem, 5vw, 4rem); color: var(--white); margin-bottom: 15px; }
         .hero-content h1 span { color: var(--acc); }
         
+        /* DOWNLOAD LOGIC */
         .download-box { position: relative; display: inline-block; margin-top: 30px; }
-        .main-dl-btn { background: var(--green); color: white; padding: 16px 40px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s; }
+        .main-dl-btn { background: var(--green); color: white; padding: 16px 40px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: 0.3s; position: relative; z-index: 10; }
         .main-dl-btn:hover { transform: translateY(-3px); background: #2ea043; }
 
         .dl-list { position: absolute; bottom: calc(100% + 12px); left: 0; width: 280px; background: var(--card); border: 1px solid #30363d; border-radius: 12px; display: none; flex-direction: column; overflow: hidden; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); z-index: 100; }
         .dl-list.active { display: flex; animation: fadeIn 0.3s ease; }
-        .dl-item { padding: 14px 20px; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #30363d; transition: 0.2s; }
-        .dl-item:hover { background: #21262d; }
+        .dl-item { padding: 16px 20px; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #30363d; transition: 0.2s; cursor: pointer; }
+        .dl-item:hover { background: #21262d; padding-left: 25px; }
+        .dl-item i { font-size: 20px; width: 25px; text-align: center; }
+        .dl-item .title { font-weight: bold; font-size: 14px; display: block; }
+        .dl-item .sub { font-size: 10px; color: #8b949e; }
 
-        /* ТЕРМИНАЛ С АНИМАЦИЕЙ */
         .hero-code { flex: 1.2; perspective: 1000px; }
         .code-card {
             background: #010409; border: 1px solid #30363d; border-radius: 16px;
@@ -127,8 +129,14 @@
             </p>
             <div class="download-box">
                 <div class="dl-list" id="dlList">
-                    <a href="#" class="dl-item"><i class="fab fa-windows" style="color:#00a4ef"></i><div><span class="title">Windows</span><span class="sub" id="sub-win">Скачать IDE (.html)</span></div></a>
-                    <a href="#" class="dl-item"><i class="fab fa-android" style="color:#3ddc84"></i><div><span class="title">Android</span><span class="sub" id="sub-and">Скачать Студию (.apk)</span></div></a>
+                    <a href="uzh_station.html" download class="dl-item">
+                        <i class="fab fa-windows" style="color:#00a4ef"></i>
+                        <div><span class="title">Windows / Web</span><span class="sub" id="sub-win">Скачать IDE (.html)</span></div>
+                    </a>
+                    <a href="uzh_station.apk" download class="dl-item">
+                        <i class="fab fa-android" style="color:#3ddc84"></i>
+                        <div><span class="title">Android Mobile</span><span class="sub" id="sub-and">Скачать Студию (.apk)</span></div>
+                    </a>
                 </div>
                 <button class="main-dl-btn" onclick="toggleDl()">
                     <i class="fas fa-download"></i> <span id="btn-text" class="fade-content">Скачать UZH</span>
@@ -153,84 +161,46 @@
 </footer>
 
 <script>
-    /* ЛОГИКА СНЕГА */
+    /* СНЕГ */
     const canvas = document.getElementById('snow-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [], animationId = null, isSnowing = false;
-
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize);
     resize();
-
     class Particle {
         constructor() { this.reset(); }
-        reset() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height - canvas.height;
-            this.size = Math.random() * 3 + 1;
-            this.speed = Math.random() * 1 + 0.5;
-            this.velX = Math.random() * 0.5 - 0.25;
-        }
-        update() {
-            this.y += this.speed;
-            this.x += this.velX;
-            if (this.y > canvas.height) this.reset();
-        }
-        draw() {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.beginPath();
-            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-            ctx.fill();
-        }
+        reset() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height - canvas.height; this.size = Math.random() * 3 + 1; this.speed = Math.random() * 1 + 0.5; this.velX = Math.random() * 0.5 - 0.25; }
+        update() { this.y += this.speed; this.x += this.velX; if (this.y > canvas.height) this.reset(); }
+        draw() { ctx.fillStyle = 'rgba(255, 255, 255, 0.8)'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
     }
-
-    function animateSnow() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        animationId = requestAnimationFrame(animateSnow);
-    }
-
+    function animateSnow() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); animationId = requestAnimationFrame(animateSnow); }
     function toggleSnow() {
         isSnowing = !isSnowing;
         const btn = document.getElementById('snowBtn');
-        if (isSnowing) {
-            btn.classList.add('active');
-            if (particles.length === 0) for(let i=0; i<100; i++) particles.push(new Particle());
-            animateSnow();
-        } else {
-            btn.classList.remove('active');
-            cancelAnimationFrame(animationId);
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
+        if (isSnowing) { btn.classList.add('active'); if (particles.length === 0) for(let i=0; i<100; i++) particles.push(new Particle()); animateSnow(); }
+        else { btn.classList.remove('active'); cancelAnimationFrame(animationId); ctx.clearRect(0, 0, canvas.width, canvas.height); }
     }
 
-    /* ЛОГИКА САЙТА */
+    /* САЙТ */
     const translations = {
         ru: { h1: 'Студия <span>UZH</span>', p: 'IDE нового поколения от <b>Koshka Corp</b>. <br>Версия ядра: 20.9 [Stable]', btn: 'Скачать UZH', subWin: 'Скачать IDE (.html)', subAnd: 'Скачать Студию (.apk)', code: [{t: 'using-guzh', c: 'kw'}, {t: '\n\n', c: ''}, {t: 'name-', c: 'var'}, {t: '"Studio_User"', c: 'str'}, {t: '\n', c: ''}, {t: 'write-', c: 'kw'}, {t: '"Привет, UZH!"', c: 'str'}, {t: '\n\n', c: ''}, {t: 'read-', c: 'kw'}, {t: 'action', c: 'var'}, {t: '\n', c: ''}, {t: 'write-', c: 'kw'}, {t: '"Выполняю..."', c: 'str'}] },
         en: { h1: '<span>UZH</span> Studio', p: 'Next-gen IDE by <b>Koshka Corp</b>. <br>Kernel: 20.9 [Stable]', btn: 'Download UZH', subWin: 'Get IDE (.html)', subAnd: 'Get Studio (.apk)', code: [{t: 'using-guzh', c: 'kw'}, {t: '\n\n', c: ''}, {t: 'name-', c: 'var'}, {t: '"Studio_User"', c: 'str'}, {t: '\n', c: ''}, {t: 'write-', c: 'kw'}, {t: '"Hello, UZH!"', c: 'str'}, {t: '\n\n', c: ''}, {t: 'read-', c: 'kw'}, {t: 'action', c: 'var'}, {t: '\n', c: ''}, {t: 'write-', c: 'kw'}, {t: '"Processing..."', c: 'str'}] }
     };
 
     let currentLang = 'ru', tokenIdx = 0, charIdx = 0, typingTimer;
-
     function typeCode() {
         const terminal = document.getElementById('terminal');
         const tokens = translations[currentLang].code;
         if (tokenIdx < tokens.length) {
             const token = tokens[tokenIdx];
-            if (charIdx === 0) {
-                const span = document.createElement('span');
-                if (token.c) span.className = token.c;
-                span.id = 'active-token';
-                terminal.appendChild(span);
-            }
+            if (charIdx === 0) { const span = document.createElement('span'); if (token.c) span.className = token.c; span.id = 'active-token'; terminal.appendChild(span); }
             const activeSpan = document.getElementById('active-token');
-            activeSpan.textContent += token.t[charIdx];
-            charIdx++;
+            activeSpan.textContent += token.t[charIdx]; charIdx++;
             if (charIdx >= token.t.length) { activeSpan.id = ''; tokenIdx++; charIdx = 0; }
             typingTimer = setTimeout(typeCode, 45);
         }
     }
-
     function resetTerminal() { clearTimeout(typingTimer); document.getElementById('terminal').innerHTML = ''; tokenIdx = 0; charIdx = 0; typeCode(); }
     function toggleLanguage() {
         const isEn = document.getElementById('lang-toggle').checked;
@@ -242,13 +212,10 @@
             document.getElementById('btn-text').innerText = translations[currentLang].btn;
             document.getElementById('sub-win').innerText = translations[currentLang].subWin;
             document.getElementById('sub-and').innerText = translations[currentLang].subAnd;
-            document.getElementById('label-ru').classList.toggle('active', !isEn);
-            document.getElementById('label-en').classList.toggle('active', isEn);
             document.querySelectorAll('.fade-content').forEach(f => f.classList.remove('fade-hidden'));
             resetTerminal();
         }, 300);
     }
-
     function toggleDl() { document.getElementById('dlList').classList.toggle('active'); }
     window.onclick = e => { if (!e.target.closest('.download-box')) document.getElementById('dlList').classList.remove('active'); }
     window.onload = typeCode;
